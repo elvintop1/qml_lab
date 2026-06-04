@@ -1,0 +1,12 @@
+/.venv
+/outputs
+/results
+/README_PHASE2.md
+
+# Local/private encoding work
+/README_HA_SAGE*.md
+/R_HASAGE*.md
+/encodings/ha_sage*.py
+/encodings/hardware_aware.py
+/encodings/__pycache__/ha_sage*.pyc
+/encodings/__pycache__/hardware_aware*.pyc
