@@ -14,6 +14,21 @@ from . import hamiltonian
 from . import trainable_kernel
 from . import integer
 from . import onehot
-from . import hardware_aware
-from . import ha_sage
-from . import ha_sage_cmtsd
+
+try:
+    from . import hardware_aware
+except ModuleNotFoundError as exc:
+    if "hardware_aware" not in str(exc):
+        raise
+
+try:
+    from . import ha_sage
+except ModuleNotFoundError as exc:
+    if "ha_sage" not in str(exc):
+        raise
+
+try:
+    from . import ha_sage_cmtsd
+except ModuleNotFoundError as exc:
+    if "ha_sage_cmtsd" not in str(exc):
+        raise

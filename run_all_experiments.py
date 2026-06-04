@@ -89,6 +89,12 @@ ALL_ENCODINGS: List[str] = [
     "onehot",
 ]
 
+PRIVATE_ENCODING_FILES: Dict[str, str] = {
+    "ha_sage": "encodings/ha_sage.py",
+    "ha_sage_cmtsd": "encodings/ha_sage_cmtsd.py",
+    "hardware_aware": "encodings/hardware_aware.py",
+}
+
 # The sklearn feature sweep names are loaded lazily so that --list works even
 # on machines without optional quantum dependencies.
 FEATURE_SWEEP_DEFAULT: List[str] = [
@@ -163,6 +169,25 @@ def _parse_csv_list(text: str | Iterable[str], *, all_values: List[str]) -> List
             seen.add(key)
             out.append(item)
     return out
+
+
+def _available_encodings() -> List[str]:
+    available: List[str] = []
+    for encoding in ALL_ENCODINGS:
+        rel = PRIVATE_ENCODING_FILES.get(encoding)
+        if rel is None or (REPO_ROOT / rel).exists():
+            available.append(encoding)
+    return available
+
+
+def _missing_private_encodings(encodings: Iterable[str]) -> List[str]:
+    missing: List[str] = []
+    for encoding in encodings:
+        key = _canon(encoding)
+        for private_name, rel in PRIVATE_ENCODING_FILES.items():
+            if key == _canon(private_name) and not (REPO_ROOT / rel).exists():
+                missing.append(encoding)
+    return missing
 
 
 def _json_default(obj: Any) -> Any:
@@ -1326,8 +1351,13 @@ def print_available() -> None:
     for item in ALL_MODELS:
         print(f"  - {item}")
     print("\nEncodings:")
-    for item in ALL_ENCODINGS:
+    for item in _available_encodings():
         print(f"  - {item}")
+    missing_private = [name for name in PRIVATE_ENCODING_FILES if name not in _available_encodings()]
+    if missing_private:
+        print("\nLocal/private encodings not present in this checkout:")
+        for item in missing_private:
+            print(f"  - {item}")
     print("\nDatasets:")
     printed = set()
     for item in ALL_DATASETS:
@@ -1354,7 +1384,14 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     models = _parse_csv_list(args.models, all_values=ALL_MODELS)
-    encodings = _parse_csv_list(args.encodings, all_values=ALL_ENCODINGS)
+    encodings = _parse_csv_list(args.encodings, all_values=_available_encodings())
+    missing_private = _missing_private_encodings(encodings)
+    if missing_private:
+        names = ", ".join(missing_private)
+        raise FileNotFoundError(
+            f"Requested local/private encoding file(s) are not present: {names}. "
+            "Use public encodings or restore the ignored local encoding files."
+        )
     datasets = _parse_csv_list(args.datasets, all_values=ALL_DATASETS)
 
     out_path = Path(args.out)

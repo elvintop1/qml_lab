@@ -5,9 +5,41 @@ from typing import Any, Dict, Tuple, Optional
 import numpy as np
 
 from .registry import get_encoding_cls
-from .hardware_aware import is_hardware_aware_name, resolve_data_dependent_params
-from .ha_sage import is_ha_sage_name, resolve_ha_sage_params
-from .ha_sage_cmtsd import is_ha_sage_cmtsd_name, resolve_ha_sage_cmtsd_params
+try:
+    from .hardware_aware import is_hardware_aware_name, resolve_data_dependent_params
+except ModuleNotFoundError as exc:
+    if "hardware_aware" not in str(exc):
+        raise
+
+    def is_hardware_aware_name(name: str) -> bool:
+        return False
+
+    def resolve_data_dependent_params(encoding_name: str, params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+        return params
+
+try:
+    from .ha_sage import is_ha_sage_name, resolve_ha_sage_params
+except ModuleNotFoundError as exc:
+    if "ha_sage" not in str(exc):
+        raise
+
+    def is_ha_sage_name(name: str) -> bool:
+        return False
+
+    def resolve_ha_sage_params(encoding_name: str, params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+        return params
+
+try:
+    from .ha_sage_cmtsd import is_ha_sage_cmtsd_name, resolve_ha_sage_cmtsd_params
+except ModuleNotFoundError as exc:
+    if "ha_sage_cmtsd" not in str(exc):
+        raise
+
+    def is_ha_sage_cmtsd_name(name: str) -> bool:
+        return False
+
+    def resolve_ha_sage_cmtsd_params(encoding_name: str, params: Dict[str, Any], **_: Any) -> Dict[str, Any]:
+        return params
 
 
 def features_per_qubit(encoding_name: str, params: Optional[Dict[str, Any]] = None) -> int:
